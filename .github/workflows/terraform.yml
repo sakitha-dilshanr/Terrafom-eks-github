@@ -17,18 +17,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Assume IAM Role
-        id: assume-role
-        run: |
-          CREDS=$(aws sts assume-role \
-            --role-arn "${{ secrets.AWS_ROLE_ARN }}" \
-            --role-session-name "${{ secrets.AWS_ROLE_SESSION_NAME || 'GitHubActionsSession' }}")
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::885041424953:role/CdkProjectsStack-OIDSCRole33619A92-p1RWtGjZcHFf
+          aws-region: ap-southeast-2
 
-          echo "AWS_ACCESS_KEY_ID=$(echo $CREDS | jq -r '.Credentials.AccessKeyId')" >> $GITHUB_ENV
-          echo "AWS_SECRET_ACCESS_KEY=$(echo $CREDS | jq -r '.Credentials.SecretAccessKey')" >> $GITHUB_ENV
-          echo "AWS_SESSION_TOKEN=$(echo $CREDS | jq -r '.Credentials.SessionToken')" >> $GITHUB_ENV
-
-      
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
