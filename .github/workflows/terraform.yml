@@ -1,0 +1,48 @@
+name: Terraform Deploy
+
+on:
+  push:
+    branches:
+      - main  # or your deployment branch
+
+jobs:
+  terraform:
+    name: Terraform Deploy
+    runs-on: ubuntu-latest
+
+    env:
+      TF_VAR_region: ap-southeast-2  # Example TF variable
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Assume IAM Role
+        id: assume-role
+        run: |
+          CREDS=$(aws sts assume-role \
+            --role-arn "${{ secrets.AWS_ROLE_ARN }}" \
+            --role-session-name "${{ secrets.AWS_ROLE_SESSION_NAME || 'GitHubActionsSession' }}")
+
+          echo "AWS_ACCESS_KEY_ID=$(echo $CREDS | jq -r '.Credentials.AccessKeyId')" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=$(echo $CREDS | jq -r '.Credentials.SecretAccessKey')" >> $GITHUB_ENV
+          echo "AWS_SESSION_TOKEN=$(echo $CREDS | jq -r '.Credentials.SessionToken')" >> $GITHUB_ENV
+
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0  # or whichever version you're using
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve
