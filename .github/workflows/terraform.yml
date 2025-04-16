@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      TF_VAR_region: ap-southeast-2  # Example TF variable
+      TF_VAR_region: ap-southeast-2  
 
     steps:
       - name: Checkout repository
